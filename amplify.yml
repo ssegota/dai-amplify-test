@@ -3,7 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - npm ci
+        - npm install
     build:
       commands:
         # If you use a specific framework command, keep it here (React/Vue/Svelte is still "npm run build")
