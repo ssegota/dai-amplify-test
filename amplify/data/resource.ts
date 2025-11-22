@@ -1,222 +1,147 @@
-import { defineBackend } from "@aws-amplify/backend";
-import { data } from "@aws-amplify/backend/data";
-import { auth } from "@aws-amplify/backend/auth";
+import { a, defineData, type ClientSchema } from "@aws-amplify/backend";
 
-export const backend = defineBackend({
-  auth: auth({
-    loginMechanisms: ["email"],
-    signupAttributes: ["email"],
-  }),
+/**
+ * Gen 2 schema using the TS-first builder (a.schema / a.model).
+ * Primary keys are mapped with .identifier([...]).
+ * Relations are mapped with belongsTo / hasMany and explicit FK fields.
+ */
+const schema = a
+  .schema({
+    // -------------------------
+    // Core entities
+    // -------------------------
+    Institution: a
+      .model({
+        institutionID: a.id().required(),
+        institutionName: a.string(),
+        institutionTaxNumber: a.string(),
+        institutionAddress: a.string(),
 
-  data: data({
-    schema: {
-      // -------------------------
-      // Core entities
-      // -------------------------
-      Institution: {
-        institutionID: "ID!",         // integer PK → Amplify ID
-        institutionName: "String",
-        institutionTaxNumber: "String",
-        institutionAddress: "String",
+        users: a.hasMany("UserInstitution", "institutionID"),
+      })
+      .identifier(["institutionID"]),
 
-        relationships: {
-          users: {
-            type: "hasMany",
-            model: "UserInstitution",
-            foreignKey: "institutionID",
-          },
-        },
-      },
+    User: a
+      .model({
+        userID: a.id().required(),
+        username: a.string(),
+        passwordHash: a.string(),
+        mail: a.string(),
+        role: a.string(),
 
-      User: {
-        userID: "ID!",   // integer PK → Amplify ID
-        username: "String",
-        passwordHash: "String",
-        mail: "String",
-        role: "String",
+        institutions: a.hasMany("UserInstitution", "userID"),
+        patients: a.hasMany("UserPatient", "userID"),
+        signals: a.hasMany("Signal", "userID"),
+      })
+      .identifier(["userID"]),
 
-        relationships: {
-          institutions: {
-            type: "hasMany",
-            model: "UserInstitution",
-            foreignKey: "userID",
-          },
-          patients: {
-            type: "hasMany",
-            model: "UserPatient",
-            foreignKey: "userID",
-          },
-          signals: {
-            type: "hasMany",
-            model: "Signal",
-            foreignKey: "userID",
-          },
-        },
-      },
+    Patient: a
+      .model({
+        patientID: a.id().required(),
+        firstName: a.string(),
+        lastName: a.string(),
 
-      Patient: {
-        patientID: "ID!",
-        firstName: "String",
-        lastName: "String",
+        users: a.hasMany("UserPatient", "patientID"),
+        signals: a.hasMany("Signal", "patientID"),
+      })
+      .identifier(["patientID"]),
 
-        relationships: {
-          users: {
-            type: "hasMany",
-            model: "UserPatient",
-            foreignKey: "patientID",
-          },
-          signals: {
-            type: "hasMany",
-            model: "Signal",
-            foreignKey: "patientID",
-          },
-        },
-      },
+    // -------------------------
+    // Many-to-Many linking tables
+    // -------------------------
+    UserInstitution: a
+      .model({
+        userID: a.id().required(),
+        institutionID: a.id().required(),
 
-      // -------------------------
-      // Many-to-Many linking tables
-      // -------------------------
-      UserInstitution: {
-        userID: "ID!",
-        institutionID: "ID!",
+        user: a.belongsTo("User", "userID"),
+        institution: a.belongsTo("Institution", "institutionID"),
+      })
+      .identifier(["userID", "institutionID"]),
 
-        relationships: {
-          user: {
-            type: "belongsTo",
-            model: "User",
-            targetField: "userID",
-          },
-          institution: {
-            type: "belongsTo",
-            model: "Institution",
-            targetField: "institutionID",
-          },
-        },
-      },
+    UserPatient: a
+      .model({
+        userID: a.id().required(),
+        patientID: a.id().required(),
 
-      UserPatient: {
-        userID: "ID!",
-        patientID: "ID!",
+        user: a.belongsTo("User", "userID"),
+        patient: a.belongsTo("Patient", "patientID"),
+      })
+      .identifier(["userID", "patientID"]),
 
-        relationships: {
-          user: {
-            type: "belongsTo",
-            model: "User",
-            targetField: "userID",
-          },
-          patient: {
-            type: "belongsTo",
-            model: "Patient",
-            targetField: "patientID",
-          },
-        },
-      },
+    // -------------------------
+    // Experimental data hierarchy
+    // -------------------------
+    Signal: a
+      .model({
+        experimentID: a.id().required(),
+        userID: a.id().required(),
+        patientID: a.id().required(),
+        uploadTime: a.datetime(),
+        status: a.string(),
+        filename: a.string(),
+        path: a.string(),
 
-      // -------------------------
-      // Experimental data hierarchy
-      // -------------------------
-      Signal: {
-        experimentID: "ID!", // PK
-        userID: "ID!",
-        patientID: "ID!",
-        uploadTime: "AWSDateTime",
-        status: "String",
-        filename: "String",
-        path: "String",
+        user: a.belongsTo("User", "userID"),
+        patient: a.belongsTo("Patient", "patientID"),
 
-        relationships: {
-          user: {
-            type: "belongsTo",
-            model: "User",
-            targetField: "userID",
-          },
-          patient: {
-            type: "belongsTo",
-            model: "Patient",
-            targetField: "patientID",
-          },
-          features: {
-            type: "hasMany",
-            model: "Features",
-            foreignKey: "experimentID",
-          },
-          reports: {
-            type: "hasMany",
-            model: "Report",
-            foreignKey: "experimentID",
-          },
-          logs: {
-            type: "hasMany",
-            model: "ExperimentLogs",
-            foreignKey: "experimentID",
-          },
-        },
-      },
+        features: a.hasMany("Features", "experimentID"),
+        reports: a.hasMany("Report", "experimentID"),
+        logs: a.hasMany("ExperimentLogs", "experimentID"),
+      })
+      .identifier(["experimentID"]),
 
-      Features: {
-        resultID: "ID!",
-        experimentID: "ID!",
-        peakCounts: "Int",
-        amplitude: "Float",
-        auc: "Float",
-        fwhm: "Float",
-        frequency: "Float",
-        snr: "Float",
-        skewness: "Float",
-        kurtosis: "Float",
-        timeGenerated: "AWSDateTime",
+    Features: a
+      .model({
+        resultID: a.id().required(),
+        experimentID: a.id().required(),
+        peakCounts: a.integer(),
+        amplitude: a.float(),
+        auc: a.float(),
+        fwhm: a.float(),
+        frequency: a.float(),
+        snr: a.float(),
+        skewness: a.float(),
+        kurtosis: a.float(),
+        timeGenerated: a.datetime(),
 
-        relationships: {
-          signal: {
-            type: "belongsTo",
-            model: "Signal",
-            targetField: "experimentID",
-          },
-          reports: {
-            type: "hasMany",
-            model: "Report",
-            foreignKey: "resultID",
-          },
-        },
-      },
+        signal: a.belongsTo("Signal", "experimentID"),
+        reports: a.hasMany("Report", "resultID"),
+      })
+      .identifier(["resultID"]),
 
-      Report: {
-        reportID: "ID!",
-        experimentID: "ID!",
-        resultID: "ID",
-        timeGenerated: "AWSDateTime",
-        path: "String",
+    Report: a
+      .model({
+        reportID: a.id().required(),
+        experimentID: a.id().required(),
+        resultID: a.id(), // optional
+        timeGenerated: a.datetime(),
+        path: a.string(),
 
-        relationships: {
-          signal: {
-            type: "belongsTo",
-            model: "Signal",
-            targetField: "experimentID",
-          },
-          features: {
-            type: "belongsTo",
-            model: "Features",
-            targetField: "resultID",
-          },
-        },
-      },
+        signal: a.belongsTo("Signal", "experimentID"),
+        features: a.belongsTo("Features", "resultID"),
+      })
+      .identifier(["reportID"]),
 
-      ExperimentLogs: {
-        logID: "ID!",
-        experimentID: "ID!",
-        outputs: "String", // BLOB → base64 or JSON
+    ExperimentLogs: a
+      .model({
+        logID: a.id().required(),
+        experimentID: a.id().required(),
+        outputs: a.string(), // base64/JSON string
 
-        relationships: {
-          signal: {
-            type: "belongsTo",
-            model: "Signal",
-            targetField: "experimentID",
-          },
-        },
-      },
-    },
-  }),
+        signal: a.belongsTo("Signal", "experimentID"),
+      })
+      .identifier(["logID"]),
+  })
+  // simplest default: only signed-in users can access
+  .authorization((allow) => [allow.authenticated()]);
+
+export type Schema = ClientSchema<typeof schema>;
+
+export const data = defineData({
+  schema,
+  authorizationModes: {
+    defaultAuthorizationMode: "userPool",
+  },
 });
-
-export default backend;
 
