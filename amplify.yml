@@ -6,7 +6,7 @@ backend:
         - npm ci
     build:
       commands:
-        - npx ampx generate
+        - npx ampx generate outputs
 frontend:
   phases:
     preBuild:
