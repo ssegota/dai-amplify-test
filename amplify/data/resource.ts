@@ -1,15 +1,10 @@
-import { a, defineData, type ClientSchema } from "@aws-amplify/backend";
+import { a, defineData, type ClientSchema } from "@aws-amplify/backend-data";
 
 /**
  * Gen 2 schema using the TS-first builder (a.schema / a.model).
- * Primary keys are mapped with .identifier([...]).
- * Relations are mapped with belongsTo / hasMany and explicit FK fields.
  */
 const schema = a
   .schema({
-    // -------------------------
-    // Core entities
-    // -------------------------
     Institution: a
       .model({
         institutionID: a.id().required(),
@@ -46,9 +41,6 @@ const schema = a
       })
       .identifier(["patientID"]),
 
-    // -------------------------
-    // Many-to-Many linking tables
-    // -------------------------
     UserInstitution: a
       .model({
         userID: a.id().required(),
@@ -69,9 +61,6 @@ const schema = a
       })
       .identifier(["userID", "patientID"]),
 
-    // -------------------------
-    // Experimental data hierarchy
-    // -------------------------
     Signal: a
       .model({
         experimentID: a.id().required(),
@@ -114,7 +103,7 @@ const schema = a
       .model({
         reportID: a.id().required(),
         experimentID: a.id().required(),
-        resultID: a.id(), // optional
+        resultID: a.id(),
         timeGenerated: a.datetime(),
         path: a.string(),
 
@@ -127,13 +116,12 @@ const schema = a
       .model({
         logID: a.id().required(),
         experimentID: a.id().required(),
-        outputs: a.string(), // base64/JSON string
+        outputs: a.string(),
 
         signal: a.belongsTo("Signal", "experimentID"),
       })
       .identifier(["logID"]),
   })
-  // simplest default: only signed-in users can access
   .authorization((allow) => [allow.authenticated()]);
 
 export type Schema = ClientSchema<typeof schema>;
@@ -144,4 +132,3 @@ export const data = defineData({
     defaultAuthorizationMode: "userPool",
   },
 });
-
