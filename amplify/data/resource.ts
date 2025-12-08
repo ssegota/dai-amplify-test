@@ -1,89 +1,51 @@
-import { a, defineData, type ClientSchema } from "@aws-amplify/backend-data";
+import { a, defineData } from "@aws-amplify/backend";
 
-/**
- * Gen 2 schema using the TS-first builder (a.schema / a.model).
- */
-const schema = a
-  .schema({
-    Institution: a
-      .model({
-        institutionID: a.id().required(),
-        institutionName: a.string(),
-        institutionTaxNumber: a.string(),
-        institutionAddress: a.string(),
+export const data = defineData({
+  schema: a.schema({
 
-        users: a.hasMany("UserInstitution", "institutionID"),
-      })
-      .identifier(["institutionID"]),
-
+    // ===========================
+    // USER
+    // ===========================
     User: a
       .model({
         userID: a.id().required(),
         username: a.string(),
         passwordHash: a.string(),
-        mail: a.string(),
-        role: a.string(),
 
-        institutions: a.hasMany("UserInstitution", "userID"),
-        patients: a.hasMany("UserPatient", "userID"),
-        signals: a.hasMany("Signal", "userID"),
+        patients: a.hasMany("Patient", "userID"),
       })
-      .identifier(["userID"]),
+      .identifier(["userID"])
+      .authorization((allow) => [
+        allow.group("admin").to(["create", "read", "update", "delete"]),
+      ]),
 
+    // ===========================
+    // PATIENT
+    // ===========================
     Patient: a
       .model({
         patientID: a.id().required(),
         firstName: a.string(),
         lastName: a.string(),
 
-        users: a.hasMany("UserPatient", "patientID"),
-        signals: a.hasMany("Signal", "patientID"),
-      })
-      .identifier(["patientID"]),
-
-    UserInstitution: a
-      .model({
-        userID: a.id().required(),
-        institutionID: a.id().required(),
-
+        userID: a.id(),
         user: a.belongsTo("User", "userID"),
-        institution: a.belongsTo("Institution", "institutionID"),
+
+        features: a.hasMany("Feature", "patientID"),
       })
-      .identifier(["userID", "institutionID"]),
+      .identifier(["patientID"])
+      .authorization((allow) => [
+        allow.owner().to(["create", "read", "update", "delete"]),
+        allow.group("admin"),
+      ]),
 
-    UserPatient: a
+    // ===========================
+    // FEATURE
+    // ===========================
+    Feature: a
       .model({
-        userID: a.id().required(),
-        patientID: a.id().required(),
+        featureID: a.id().required(),
 
-        user: a.belongsTo("User", "userID"),
-        patient: a.belongsTo("Patient", "patientID"),
-      })
-      .identifier(["userID", "patientID"]),
-
-    Signal: a
-      .model({
-        experimentID: a.id().required(),
-        userID: a.id().required(),
-        patientID: a.id().required(),
-        uploadTime: a.datetime(),
-        status: a.string(),
-        filename: a.string(),
-        path: a.string(),
-
-        user: a.belongsTo("User", "userID"),
-        patient: a.belongsTo("Patient", "patientID"),
-
-        features: a.hasMany("Features", "experimentID"),
-        reports: a.hasMany("Report", "experimentID"),
-        logs: a.hasMany("ExperimentLogs", "experimentID"),
-      })
-      .identifier(["experimentID"]),
-
-    Features: a
-      .model({
-        resultID: a.id().required(),
-        experimentID: a.id().required(),
         peakCounts: a.integer(),
         amplitude: a.float(),
         auc: a.float(),
@@ -92,43 +54,16 @@ const schema = a
         snr: a.float(),
         skewness: a.float(),
         kurtosis: a.float(),
-        timeGenerated: a.datetime(),
+        timeGenerated: a.timestamp(),
 
-        signal: a.belongsTo("Signal", "experimentID"),
-        reports: a.hasMany("Report", "resultID"),
+        patientID: a.id(),
+        patient: a.belongsTo("Patient", "patientID"),
       })
-      .identifier(["resultID"]),
-
-    Report: a
-      .model({
-        reportID: a.id().required(),
-        experimentID: a.id().required(),
-        resultID: a.id(),
-        timeGenerated: a.datetime(),
-        path: a.string(),
-
-        signal: a.belongsTo("Signal", "experimentID"),
-        features: a.belongsTo("Features", "resultID"),
-      })
-      .identifier(["reportID"]),
-
-    ExperimentLogs: a
-      .model({
-        logID: a.id().required(),
-        experimentID: a.id().required(),
-        outputs: a.string(),
-
-        signal: a.belongsTo("Signal", "experimentID"),
-      })
-      .identifier(["logID"]),
-  })
-  .authorization((allow) => [allow.authenticated()]);
-
-export type Schema = ClientSchema<typeof schema>;
-
-export const data = defineData({
-  schema,
-  authorizationModes: {
-    defaultAuthorizationMode: "userPool",
-  },
+      .identifier(["featureID"])
+      .authorization((allow) => [
+        allow.owner().to(["create", "read", "update", "delete"]),
+        allow.group("admin"),
+      ]),
+  }),
 });
+
