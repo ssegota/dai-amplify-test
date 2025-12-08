@@ -9,23 +9,21 @@ export default defineConfig({
     port: 3000 
   },
   
-  // This 'resolve' block is critical for Amplify Gen 2 with Vite
+  // CRITICAL FIX: The resolve block tells Rollup where the browser-compatible 
+  // files are located inside the aws-amplify package structure.
   resolve: {
     alias: {
-      // 1. Original fix for base runtime config
+      // 1. Ensures the browser-compatible runtime configuration is used
       './runtimeConfig': './runtimeConfig.browser',
       
-      // 👇 ADD THESE NEW ALIAS ENTRIES 👇
-      // 2. Resolve the core Amplify data package to its browser-specific entry point
-      'aws-amplify/data': 'aws-amplify/dist/esm/data',
+      // 2. Fixes the 'aws-amplify/data' ENOENT error
+      // It points to the index file inside the modular folder structure.
+      'aws-amplify/data': 'aws-amplify/dist/esm/data/index',
 
-      // 3. (Highly Recommended) Resolve other necessary modular packages
-      'aws-amplify/auth': 'aws-amplify/dist/esm/auth',
-      'aws-amplify/core': 'aws-amplify/dist/esm/core',
+      // (Highly Recommended) Add aliases for other modular packages you may use
+      'aws-amplify/auth': 'aws-amplify/dist/esm/auth/index',
+      'aws-amplify/core': 'aws-amplify/dist/esm/core/index',
       'aws-amplify': 'aws-amplify/dist/esm/index', 
-      
-      // 4. (Optional but good practice) Add a resolver for the configuration file
-      './aws-exports.js': './aws-exports.js', 
     },
   },
 });
