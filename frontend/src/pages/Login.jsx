@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { generateClient } from "aws-amplify/data";
-
-const client = generateClient();
+import { API, graphqlOperation } from "aws-amplify";
+import { listUsers } from "../graphql/queries"; // adjust path
 
 export default function Login() {
   const [username, setUsername] = useState("zamarin");
@@ -11,10 +10,14 @@ export default function Login() {
 
   const handleLogin = async () => {
     try {
-      // 1. Query user by username
-      const { data: users } = await client.models.User.list({
-        filter: { username: { eq: username } },
-      });
+      // 1. Query User table by username
+      const result = await API.graphql(
+        graphqlOperation(listUsers, {
+          filter: { username: { eq: username } }
+        })
+      );
+
+      const users = result.data.listUsers.items;
 
       if (users.length === 0) {
         alert("User not found");
@@ -23,15 +26,15 @@ export default function Login() {
 
       const user = users[0];
 
-      // 2. Compare plaintext password with stored passwordHash
-      // (Temporary until Cognito)
+      // 2. Password comparison (temporary until Cognito)
       if (user.passwordHash !== password) {
         alert("Invalid password");
         return;
       }
 
-      // 3. Successful login → redirect with userID
+      // 3. Navigate to patients
       navigate(`/patients/${user.userID}`);
+
     } catch (error) {
       console.error("Login error:", error);
       alert("Unexpected error: " + error.message);
