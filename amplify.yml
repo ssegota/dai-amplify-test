@@ -1,32 +1,47 @@
 version: 1
+# This is a full-stack configuration for an Amplify Gen 2 application
 
 backend:
   phases:
     build:
       commands:
-        # Generate the amplify_outputs.json file in the root directory
+        # 1. CRITICAL FIX: Install the 'aws-amplify' package globally or in the root.
+        #    This package provides the 'ampx' executable.
+        - npm install -g aws-amplify@latest
+        
+        # 2. Deploy the backend (or generate outputs for a feature branch)
+        #    This command should now succeed because 'ampx' is installed.
         - npx ampx generate outputs
+    
     postBuild:
       commands:
         # Copy the generated config into the frontend source folder
         - cp ./amplify_outputs.json ./frontend/src/amplify_outputs.json
 
+---
+
 frontend:
   phases:
     preBuild:
       commands:
+        # Navigate into the frontend sub-directory
         - cd frontend
+        
+        # Install the frontend dependencies (packages listed in frontend/package.json)
         - npm ci || npm install
+    
     build:
       commands:
+        # Run the frontend's build script
         - npm run build
 
   artifacts:
-    baseDirectory: dist
+    # Specify the directory containing the built frontend files
+    baseDirectory: frontend/dist 
     files:
       - '**/*'
 
   cache:
     paths:
+      # Cache node_modules for the frontend directory
       - frontend/node_modules/**/*
-
