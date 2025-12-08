@@ -1,17 +1,10 @@
 version: 1
-backend:
-  phases:
-    build:
-      commands:
-        # The `--yes` flag automatically confirms the deployment.
-        - amplify push --yes
 frontend:
   phases:
     preBuild:
       commands:
         - cd frontend
-        # Use 'npm ci' for production/CI/CD builds to ensure reproducible installs
-        - npm ci
+        - npm ci || npm install
     build:
       commands:
         - npm run build
