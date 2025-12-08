@@ -8,8 +8,6 @@ backend:
     build:
       commands:
         # Standard commands to build the backend and generate amplify_outputs.json in the root
-        - # amplify backend build command here if you have one
-        - # amplify push --yes command here if you have one
     postBuild:
       commands:
         # ⚠️ CRITICAL STEP: COPY THE CONFIG FILE
