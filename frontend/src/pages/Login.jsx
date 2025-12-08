@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API, graphqlOperation } from "aws-amplify";
-import { listUsers } from "../graphql/queries"; // adjust path
+import { listUsers } from "../amplify-client/queries";
 
 export default function Login() {
   const [username, setUsername] = useState("zamarin");
