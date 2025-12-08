@@ -4,11 +4,9 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App.jsx';
 import './style.css';
 
-// ✅ Add Amplify initialization
 import { Amplify } from 'aws-amplify';
-import outputs from './amplify_outputs.json';
+import outputs from './amplify_outputs.json?import';   // 🔥 NEW
 
-// MUST run BEFORE any generateClient() call in your app
 Amplify.configure(outputs);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
