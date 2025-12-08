@@ -1,21 +1,6 @@
 version: 1
 # This is a full-stack configuration for an Amplify Gen 2 application
 
-backend:
-  phases:
-    build:
-      commands:
-        # CORRECT FIX: Install project dependencies from root package.json
-        # This installs '@aws-amplify/backend-cli' which provides the 'ampx' command.
-        - npm ci
-
-        # Now this will work because 'ampx' is present in node_modules
-        - npx ampx generate outputs
-
-    postBuild:
-      commands:
-        # Copy the generated config into the frontend source folder
-        - cp ./amplify_outputs.json ./frontend/src/amplify_outputs.json
 
 frontend:
   phases:
