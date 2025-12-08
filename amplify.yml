@@ -18,7 +18,6 @@ backend:
         # Copy the generated config into the frontend source folder
         - cp ./amplify_outputs.json ./frontend/src/amplify_outputs.json
 
----
 
 frontend:
   phases:
