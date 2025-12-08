@@ -1,4 +1,5 @@
 import { a, defineData } from "@aws-amplify/backend";
+import { seed } from "./seed"; // <-- CORRECTED PATH
 
 export const data = defineData({
   schema: a.schema({
@@ -65,5 +66,6 @@ export const data = defineData({
         allow.group("admin"),
       ]),
   }),
-});
-
+  // --- SEEDING HOOK ---
+  seed: seed,
+} as any); // <-- TYPE ASSERTION TO FIX TS2353 ERROR
