@@ -6,7 +6,7 @@ import './style.css';
 
 // ✅ Add Amplify initialization
 import { Amplify } from 'aws-amplify';
-import outputs from '../../amplify_outputs.json';
+import outputs from '../amplify_outputs.json';
 
 // MUST run BEFORE any generateClient() call in your app
 Amplify.configure(outputs);
