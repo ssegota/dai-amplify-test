@@ -5,7 +5,7 @@ import App from './App.jsx';
 import './style.css';
 
 import { Amplify } from 'aws-amplify';
-import outputs from '../../amplify_outputs.json?import';   // 🔥 NEW
+import outputs from '../amplify_outputs.json?import';   // 🔥 NEW
 
 Amplify.configure(outputs);
 

@@ -1,17 +1,41 @@
 version: 1
+# This ensures that both the backend and frontend are built, 
+# and the configuration file is generated.
+# If your project is full-stack, keep the 'backend' block.
+# If it's a pure frontend deployed through Amplify, you can remove the backend block.
+backend:
+  phases:
+    build:
+      commands:
+        # Standard commands to build the backend and generate amplify_outputs.json in the root
+        - # amplify backend build command here if you have one
+        - # amplify push --yes command here if you have one
+    postBuild:
+      commands:
+        # ⚠️ CRITICAL STEP: COPY THE CONFIG FILE
+        # Copies the generated config from the project root (where Amplify puts it)
+        # to the exact location your frontend code (in src/main.jsx) expects it.
+        - cp ./amplify_outputs.json ./frontend/src/amplify_outputs.json
+
 frontend:
   phases:
     preBuild:
       commands:
+        # 1. Change into the frontend directory
         - cd frontend
+        # 2. Install dependencies
         - npm ci || npm install
     build:
       commands:
+        # 3. Execute the build script
         - npm run build
   artifacts:
-    baseDirectory: frontend/dist
+    # This path is relative to the directory where 'npm run build' was executed (which is 'frontend/')
+    # so 'dist' is correct IF 'npm run build' outputs to frontend/dist.
+    baseDirectory: dist 
     files:
       - '**/*'
   cache:
     paths:
+      # This path is relative to the project root
       - frontend/node_modules/**/*
