@@ -1,22 +1,24 @@
 version: 1
 backend:
   phases:
-    preBuild:
-      commands:
-        - npm ci
     build:
       commands:
-        - npx ampx generate outputs
+        # The `--yes` flag automatically confirms the deployment.
+        - amplify push --yes
 frontend:
   phases:
     preBuild:
       commands:
+        - cd frontend
+        # Use 'npm ci' for production/CI/CD builds to ensure reproducible installs
         - npm ci
     build:
       commands:
         - npm run build
   artifacts:
-    baseDirectory: dist
+    baseDirectory: frontend/dist
     files:
       - '**/*'
-
+  cache:
+    paths:
+      - frontend/node_modules/**/*
